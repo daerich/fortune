@@ -53,6 +53,7 @@ dir = ARGV
 if ARGV.empty?
   Dir.chdir(__dir__)
   dir = Dir.glob("datfiles/*")
+  dir = dir.keep_if {|el| !(el =~ /LICENSE/) }
 end
 dir.each {|arg|
   files << DatEntry.new(arg)
