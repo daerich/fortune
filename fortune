@@ -1,0 +1,82 @@
+#!/usr/bin/env ruby
+# ISC License
+#
+# Copyright (c) 2022 Erich Ericson
+#
+# Permission to use, copy, modify, and/or distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+# REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+# AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+# INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+# LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+# OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+# PERFORMANCE OF THIS SOFTWARE.
+
+def die(reason, err)
+  $stderr.puts("Something went wrong " + reason + "\nReason:" + err.to_s)
+  exit(1)
+end
+class DatEntry
+  def initialize(fname)
+    @name = fname
+    @content = DatEntry.findContent(fname)
+  end
+  def speak #Speaks wisdom
+    rnd = Random.rand(0...@content.length)
+    file = File.open(@name)
+    file.pos = @content[rnd]
+    line = ""
+    line += file.gets until /%\n/ || file.eof?
+    line.sub!(/%\n/,"")
+    rescue => err
+      die "reading datfile #{@name}", err
+    ensure
+      file.close if defined? file.close
+  end
+  def DatEntry.findContent(fname)
+    file = File.open(fname)
+    count = [0]
+    count << file.pos if /%/ while file.gets
+    count
+    rescue => err
+       die "indexing content at #{fname}", err
+    ensure
+      file.close if defined? file.close
+  end
+end
+begin
+files = []
+dir = ARGV
+if ARGV.empty?
+  Dir.chdir(__dir__)
+  dir = Dir.glob("datfiles/*")
+end
+dir.each {|arg|
+  files << DatEntry.new(arg)
+}
+rnd = Random.rand(0...files.length)
+puts files[rnd].speak
+rescue => err
+  $stderr.puts "Main thread exited unexpectedly!Reason:\n#{err.to_s}"
+  exit(1)
+end
+
+#Historic braindump
+#begin
+#  file = File.open(ARGV[0])
+#  count = []
+#  count << file.pos if /%/ while file.gets
+#  rnd = Random.rand(0...count.length)
+#  file.pos = count[rnd]
+#  line = ""
+#  line += file.gets until /%\n/
+#  line.sub!(/%\n/,"")
+#  puts line
+#rescue => err
+#  $stdout.puts "Something went wrong!\nReason: " + err.to_s
+#ensure
+#  file.close if defined? file.close
+#end
